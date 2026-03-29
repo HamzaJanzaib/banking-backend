@@ -1,5 +1,5 @@
 
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
 const schema = new mongoose.Schema({
@@ -46,4 +46,6 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
  * @property {Date} createdAt - The date the user was created
  * @property {Date} updatedAt - The date the user was last updated
  */
-export const User = mongoose.model("User", schema);
+const User = mongoose.model("User", schema);
+
+module.exports = { User };

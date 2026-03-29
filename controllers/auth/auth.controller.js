@@ -1,4 +1,5 @@
-const { User } = require("../../models/user");
+const { User } = require("../../models/user.js");
+const { generateAccessToken, generateRefreshToken, verifyToken } = require("../../utils/jwt.js");
 
 /**
  * 
@@ -58,11 +59,30 @@ const login = async (req, res) => {
         if (!user) {
             return res.status(400).json({ success: false, message: "Invalid email or password" });
         }
-        const isMatch = await user.validPassword(password);
+        const isMatch = await user.matchPassword(password);
 
         if (!isMatch) {
             return res.status(400).json({ success: false, message: "Invalid email or password" });
         }
+
+        const payload = { id: user._id, email: user.email };
+        const accessToken = generateAccessToken(payload);
+        const refreshToken = generateRefreshToken(payload);
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
         res.status(200).json({ success: true, message: "User logged in successfully", user });
 
 
@@ -71,7 +91,49 @@ const login = async (req, res) => {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res
+ * refresh token controller
+ * POST /api/auth/refresh
+ * @returns {object} 200 - New access token
+ * @returns {Error} 401 - Unauthorized
+ */
+const refreshToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.cookies;
+
+        if (!refreshToken) {
+            return res.status(401).json({ success: false, message: "Refresh token not provided" });
+        }
+
+        const decoded = verifyToken(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+        const user = await User.findById(decoded.id);
+        if (!user) {
+            return res.status(401).json({ success: false, message: "Invalid refresh token" });
+        }
+
+        const payload = { id: user._id, email: user.email };
+        const newAccessToken = generateAccessToken(payload);
+
+        res.cookie('accessToken', newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000
+        });
+
+        res.status(200).json({ success: true, message: "Token refreshed" });
+
+    } catch (error) {
+        res.status(401).json({ success: false, message: "Invalid refresh token" });
+    }
+}
+
 module.exports = {
     register,
-    login
+    login,
+    refreshToken
 }

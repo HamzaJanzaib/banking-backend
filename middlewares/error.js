@@ -1,7 +1,7 @@
 
-import { envMode } from "../app.js";
+const { envMode } = require("../app.js");
   
-export const errorMiddleware = (
+const errorMiddleware = (
   err,
   req,
   res,
@@ -25,13 +25,15 @@ export const errorMiddleware = (
   
 };
   
-export const TryCatch = (passedFunc) => async (req, res, next) => {
+const TryCatch = (passedFunc) => async (req, res, next) => {
  try {
     await passedFunc(req, res, next);
  } catch (error) {
     next(error);
    }
 };
+
+module.exports = { errorMiddleware, TryCatch };
   
   
   

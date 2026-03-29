@@ -1,15 +1,18 @@
 
-import express from "express"
-import helmet from "helmet"
-import cors from 'cors'
-import { errorMiddleware } from "./middlewares/error.js"
-import morgan from "morgan"
-import { connectDB } from "./lib/db.js"
-import dotenv from "dotenv"
+const express = require("express");
+const helmet = require("helmet");
+const cors = require('cors');
+const { errorMiddleware } = require("./middlewares/error.js");
+const morgan = require("morgan");
+const { connectDB } = require("./lib/db.js");
+const dotenv = require("dotenv");
+const authRoutes = require("./routes/auth.routes.js");
+const userRoutes = require("./routes/user.routes.js");
+const cookieParser = require("cookie-parser");
 
 dotenv.config({ path: './.env', });
 
-export const envMode = process.env.NODE_ENV?.trim() || 'DEVELOPMENT';
+const envMode = process.env.NODE_ENV?.trim() || 'DEVELOPMENT';
 const port = process.env.PORT || 3000;
 
 connectDB();
@@ -28,6 +31,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: '*', credentials: true }));
+app.use(cookieParser());
 app.use(morgan('dev'));
 
 
@@ -36,6 +40,8 @@ app.get('/', (req, res) => {
 });
 
 // your routes here
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 
 app.get("/*splat", (req, res) => {
@@ -48,3 +54,5 @@ app.get("/*splat", (req, res) => {
 app.use(errorMiddleware);
 
 app.listen(port, () => console.log('Server is working on Port:' + port + ' in ' + envMode + ' Mode.'));
+
+module.exports = { app, envMode };
