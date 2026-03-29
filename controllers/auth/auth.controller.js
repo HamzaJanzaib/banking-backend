@@ -1,5 +1,6 @@
 const { User } = require("../../models/user.js");
 const { generateAccessToken, generateRefreshToken, verifyToken } = require("../../utils/jwt.js");
+const { setTokenCookies, setAccessTokenCookie } = require("../../utils/cookie.js");
 
 /**
  * 
@@ -69,19 +70,7 @@ const login = async (req, res) => {
         const accessToken = generateAccessToken(payload);
         const refreshToken = generateRefreshToken(payload);
 
-        res.cookie('accessToken', accessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 15 * 60 * 1000 // 15 minutes
-        });
-
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
+        setTokenCookies(res, accessToken, refreshToken);
 
         res.status(200).json({ success: true, message: "User logged in successfully", user });
 
@@ -118,12 +107,7 @@ const refreshToken = async (req, res) => {
         const payload = { id: user._id, email: user.email };
         const newAccessToken = generateAccessToken(payload);
 
-        res.cookie('accessToken', newAccessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 15 * 60 * 1000
-        });
+        setAccessTokenCookie(res, newAccessToken);
 
         res.status(200).json({ success: true, message: "Token refreshed" });
 
