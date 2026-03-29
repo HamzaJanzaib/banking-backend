@@ -1,6 +1,7 @@
 const { User } = require("../../models/user.js");
 const { generateAccessToken, generateRefreshToken, verifyToken } = require("../../utils/jwt.js");
 const { setTokenCookies, setAccessTokenCookie } = require("../../utils/cookie.js");
+const { sendCreated, sendOk, sendBadRequest, sendServerError, sendUnauthorized } = require("../../utils/response.js");
 
 /**
  * 
@@ -19,21 +20,21 @@ const register = async (req, res) => {
         const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({ success: false, message: "Please provide name, email and password" });
+            return sendBadRequest(res, "Please provide name, email and password");
         }
 
         const existingUser = await User.findOne({ where: { email } });
 
         if (existingUser) {
-            return res.status(400).json({ success: false, message: "User already exists" });
+            return sendBadRequest(res, "User already exists");
         }
 
         const user = await User.create({ name, email, password });
 
-        res.status(201).json({ success: true, message: "User registered successfully", user });
+        sendCreated(res, "User registered successfully", user);
 
     } catch (error) {
-        res.status(500).json({ success: false, message: "Server Error" });
+        sendServerError(res);
     }
 }
 
@@ -54,16 +55,16 @@ const login = async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({ success: false, message: "Please provide email and password" });
+            return sendBadRequest(res, "Please provide email and password");
         }
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            return res.status(400).json({ success: false, message: "Invalid email or password" });
+            return sendBadRequest(res, "Invalid email or password");
         }
         const isMatch = await user.matchPassword(password);
 
         if (!isMatch) {
-            return res.status(400).json({ success: false, message: "Invalid email or password" });
+            return sendBadRequest(res, "Invalid email or password");
         }
 
         const payload = { id: user._id, email: user.email };
@@ -72,11 +73,11 @@ const login = async (req, res) => {
 
         setTokenCookies(res, accessToken, refreshToken);
 
-        res.status(200).json({ success: true, message: "User logged in successfully", user });
+        sendOk(res, "User logged in successfully", user);
 
 
     } catch (error) {
-        res.status(500).json({ success: false, message: "Server Error" });
+        sendServerError(res);
     }
 }
 
@@ -94,14 +95,14 @@ const refreshToken = async (req, res) => {
         const { refreshToken } = req.cookies;
 
         if (!refreshToken) {
-            return res.status(401).json({ success: false, message: "Refresh token not provided" });
+            return sendUnauthorized(res, "Refresh token not provided");
         }
 
         const decoded = verifyToken(refreshToken, process.env.JWT_REFRESH_SECRET);
 
         const user = await User.findById(decoded.id);
         if (!user) {
-            return res.status(401).json({ success: false, message: "Invalid refresh token" });
+            return sendUnauthorized(res, "Invalid refresh token");
         }
 
         const payload = { id: user._id, email: user.email };
@@ -109,10 +110,10 @@ const refreshToken = async (req, res) => {
 
         setAccessTokenCookie(res, newAccessToken);
 
-        res.status(200).json({ success: true, message: "Token refreshed" });
+        sendOk(res, "Token refreshed");
 
     } catch (error) {
-        res.status(401).json({ success: false, message: "Invalid refresh token" });
+        sendUnauthorized(res, "Invalid refresh token");
     }
 }
 
