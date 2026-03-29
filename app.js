@@ -6,9 +6,8 @@ const { errorMiddleware } = require("./middlewares/error.js");
 const morgan = require("morgan");
 const { connectDB } = require("./lib/db.js");
 const dotenv = require("dotenv");
-const authRoutes = require("./routes/auth.routes.js");
-const userRoutes = require("./routes/user.routes.js");
 const cookieParser = require("cookie-parser");
+const Routes = require("./routes/index.js");
 
 dotenv.config({ path: './.env', });
 
@@ -40,8 +39,7 @@ app.get('/', (req, res) => {
 });
 
 // your routes here
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api', Routes);
 
 
 app.get("/*splat", (req, res) => {
