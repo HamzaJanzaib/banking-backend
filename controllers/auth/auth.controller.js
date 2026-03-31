@@ -2,7 +2,7 @@ const { User } = require("../../models/user.js");
 const { generateAccessToken, generateRefreshToken, verifyToken } = require("../../utils/jwt.js");
 const { setTokenCookies, setAccessTokenCookie } = require("../../utils/cookie.js");
 const { sendCreated, sendOk, sendBadRequest, sendServerError, sendUnauthorized } = require("../../utils/response.js");
-
+const emailService = require("../../services/email.service.js");
 /**
  * 
  * @param {*} req 
@@ -32,6 +32,8 @@ const register = async (req, res) => {
         const user = await User.create({ name, email, password });
 
         sendCreated(res, "User registered successfully", user);
+
+        await emailService.sendRegistrationEmail(email, name);
 
     } catch (error) {
         sendServerError(res);
