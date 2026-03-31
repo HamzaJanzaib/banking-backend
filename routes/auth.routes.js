@@ -1,6 +1,8 @@
 const express = require("express");
 const { register, login, refreshToken } = require("../controllers/auth/auth.controller.js");
 
+const router = express.Router();
+
 /**
  * @route POST /api/auth/register
  * @group Auth - Authentication operations

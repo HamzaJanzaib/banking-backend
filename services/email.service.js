@@ -46,7 +46,15 @@ const sendRegistrationEmail = async (to, name) => {
     await sendEmail(to, subject, text, html);
 };
 
+const sendAccountCreationEmail = async (to, name) => {
+    const subject = 'Your New Account Has Been Created!';
+    const text = `Hi ${name},\n\nYour new account has been successfully created! You can now start using our banking services.\n\nBest regards,\nThe Banking App Team`;
+    const html = `<p>Hi ${name},</p><p>Your new account has been successfully created! You can now start using our banking services.</p><p>Best regards,<br>The Banking App Team</p>`;
+    await sendEmail(to, subject, text, html);
+}
+
 
 module.exports = {
     sendRegistrationEmail,
+    sendAccountCreationEmail
 };
